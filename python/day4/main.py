@@ -25,13 +25,13 @@ if __name__ == "__main__":
     lower_bound, upper_bound = 246515, 739105
     passwords = get_all_possible_passwords(lower_bound, upper_bound)
     
-    qualified_passwords = filter(is_same_or_higher, filter(has_pairs, passwords))
+    qualified_passwords = filter(has_pairs, filter(is_same_or_higher, passwords))
 
     print("=" * 15, "Part 1", "=" * 15)
     print(f"{len(list(qualified_passwords))} passwords meet the criteria.")
     print()
 
     passwords = get_all_possible_passwords(lower_bound, upper_bound)
-    strict_qualified_passwords = filter(is_same_or_higher, filter(has_exact_pairs, passwords))
+    strict_qualified_passwords = filter(has_exact_pairs, filter(is_same_or_higher, passwords))
     print("=" * 15, "Part 2", "=" * 15)
     print(f"{len(list(strict_qualified_passwords))} passwords meet the criteria.")
