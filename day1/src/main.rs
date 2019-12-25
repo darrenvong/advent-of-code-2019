@@ -17,8 +17,7 @@ fn main() {
     let mut reader = helpers::read_puzzle_input("day1/input.txt");
 
     let part1 = calculate_fuel_requirements(&mut reader, |mass| {
-        let mass = mass.unwrap();
-        let mass = mass.parse::<isize>().unwrap();
+        let mass = mass.unwrap().parse::<isize>().unwrap();
         mass / 3 - 2
     });
 
