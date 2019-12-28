@@ -31,9 +31,13 @@ impl Computer {
         while head_pos < self.registers.len() {
             let parser = Parser::new(&self);
             let operation = parser.parse(head_pos);
-            let length = self.perform_op(operation);
 
-            head_pos += length;
+            if let Operation::Stop { .. } = operation {
+                break;
+            } else {
+                let length = self.perform_op(operation);    
+                head_pos += length;
+            }
         }
     }
 
