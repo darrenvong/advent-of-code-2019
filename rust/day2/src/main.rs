@@ -1,66 +1,21 @@
+use std::convert::TryInto;
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::BufReader;
 use std::error::Error;
+
 use helpers;
+use helpers::intcode::{self, Input};
 
-fn translate_to_program_code(reader: &mut BufReader<File>) -> Result<Vec<usize>, Box<dyn Error>> {
-    let mut program_code = String::new();
-    reader.read_to_string(&mut program_code)?;
-
-    let program_code: Vec<usize> = program_code.trim()
-        .split(",")
-        .map(|code| {
-            code.parse::<usize>().unwrap()
-        })
-        .collect();
-
-    Ok(program_code)
-}
-
-fn run_intcode_program(noun: usize, verb: usize, program_code: &mut Vec<usize>) {
-    program_code[1] = noun;
-    program_code[2] = verb;
-
-    let mut head_pos = 0;
-
-    while head_pos < program_code.len() {
-        let opcode = program_code[head_pos];
-        match opcode {
-            1 => {
-                let input1_pos = program_code[head_pos + 1];
-                let input2_pos = program_code[head_pos + 2];
-                let output_pos = program_code[head_pos + 3];
-
-                program_code[output_pos] = program_code[input1_pos] + program_code[input2_pos];
-            },
-            2 => {
-                let input1_pos = program_code[head_pos + 1];
-                let input2_pos = program_code[head_pos + 2];
-                let output_pos = program_code[head_pos + 3];
-
-                program_code[output_pos] = program_code[input1_pos] * program_code[input2_pos];
-            },
-            99 => break,
-            _ => panic!("Invalid operation encountered!")
-        }
-
-        head_pos += 4;
-    }
-}
-
-struct Input {
-    noun: usize,
-    verb: usize
-}
-
-fn find_input(target: usize, reader: &mut BufReader<File>) -> Input {
+fn find_input(target: i32, reader: &mut BufReader<File>) -> Input {
     for noun in 0..100 {
         for verb in 0..100 {
-            let mut program_code = translate_to_program_code(reader).unwrap();
-            run_intcode_program(noun, verb, &mut program_code);
+            let noun: i32 = noun.try_into().unwrap();
+            let verb: i32 = verb.try_into().unwrap();
 
-            if program_code[0] == target {
+            let mut computer = intcode::Computer::new(reader);
+            computer.run_program(Input { noun, verb });
+
+            if computer.get_register_value(0) == target {
                 return Input {
                     noun,
                     verb
@@ -77,10 +32,9 @@ fn find_input(target: usize, reader: &mut BufReader<File>) -> Input {
 fn main() -> Result<(), Box<dyn Error>> {
     let mut reader = helpers::read_puzzle_input("day2/input.txt");
     
-    let mut program_code = translate_to_program_code(&mut reader)?;
-    
-    run_intcode_program(12, 2, &mut program_code);
-    let part1 = program_code[0];
+    let mut computer = intcode::Computer::new(&mut reader);
+    computer.run_program(Input { noun: 12, verb: 2});
+    let part1 = computer.get_register_value(0);
 
     helpers::reset_reader(&mut reader);
 
