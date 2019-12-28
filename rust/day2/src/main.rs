@@ -3,7 +3,12 @@ use std::fs::File;
 use std::io::BufReader;
 
 use helpers;
-use helpers::intcode::{self, Input};
+use helpers::intcode;
+
+struct Input {
+    noun: i32,
+    verb: i32
+}
 
 fn find_input(target: i32, reader: &mut BufReader<File>) -> Input {
     for noun in 0..100 {
@@ -12,7 +17,9 @@ fn find_input(target: i32, reader: &mut BufReader<File>) -> Input {
             let verb: i32 = verb.try_into().unwrap();
 
             let mut computer = intcode::Computer::new(reader);
-            computer.run_program(Input { noun, verb });
+            computer.set_register_value(1, noun);
+            computer.set_register_value(2, verb);
+            computer.run_program();
 
             if computer.get_register_value(0) == target {
                 return Input {
@@ -32,7 +39,10 @@ fn main() {
     let mut reader = helpers::read_puzzle_input("day2/input.txt");
     
     let mut computer = intcode::Computer::new(&mut reader);
-    computer.run_program(Input { noun: 12, verb: 2});
+
+    computer.set_register_value(1, 12);
+    computer.set_register_value(2, 2);
+    computer.run_program();
     let part1 = computer.get_register_value(0);
 
     helpers::reset_reader(&mut reader);
@@ -41,10 +51,12 @@ fn main() {
 
     let part2 = 100 * noun + verb;
 
-    let marker = "-".repeat(15);
-    println!("{} Part 1 {}", marker, marker);
-    println!("The value at position 0 is: {}", part1);
-
-    println!("\n{} Part 2 {}", marker, marker);
-    println!("100 * noun + verb: {}", part2);
+    helpers::print_answers(
+        "The value at position 0 is: {part1}",
+        "100 * noun + verb: {part2}",
+        helpers::Answer {
+            part1: Box::new(part1),
+            part2: Box::new(part2)
+        }
+    );
 }

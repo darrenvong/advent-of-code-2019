@@ -33,11 +33,13 @@ fn main() {
         }
         total_mass
     });
-    
-    let marker = "-".repeat(15);
-    println!("{} Part 1 {}", marker, marker);
-    println!("The sum of fuel requirements: {}", part1);
 
-    println!("\n{} Part 2 {}", marker, marker);
-    println!("The sum of fuel requirements: {}", part2);
+    helpers::print_answers(
+        "The sum of fuel requirements: {part1}",
+        "The sum of fuel requirements: {part2}",
+        helpers::Answer {
+            part1: Box::new(part1),
+            part2: Box::new(part2)
+        }
+    );
 }
