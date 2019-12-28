@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 use std::fs::File;
 use std::io::BufReader;
-use std::error::Error;
 
 use helpers;
 use helpers::intcode::{self, Input};
@@ -29,7 +28,7 @@ fn find_input(target: i32, reader: &mut BufReader<File>) -> Input {
     panic!("Noun and verb for target not found...");
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let mut reader = helpers::read_puzzle_input("day2/input.txt");
     
     let mut computer = intcode::Computer::new(&mut reader);
@@ -48,6 +47,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("\n{} Part 2 {}", marker, marker);
     println!("100 * noun + verb: {}", part2);
-
-    Ok(())
 }
