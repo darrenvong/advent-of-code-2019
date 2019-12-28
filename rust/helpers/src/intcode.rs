@@ -11,6 +11,19 @@ pub struct Computer {
     registers: Vec<i32>
 }
 
+enum Operation {
+    Add {
+        input1: usize,
+        input2: usize,
+        output: usize
+    },
+    Multiply {
+        input1: usize,
+        input2: usize,
+        output: usize
+    }
+}
+
 impl Computer {
     pub fn new(reader: &mut BufReader<File>) -> Computer {
         let mut program_code = String::new();
@@ -37,25 +50,33 @@ impl Computer {
         while head_pos < self.registers.len() {
             let opcode = self.registers[head_pos];
             match opcode {
-                1 => {
-                    let input1_pos: usize = self.registers[head_pos + 1].try_into().unwrap();
-                    let input2_pos: usize = self.registers[head_pos + 2].try_into().unwrap();
-                    let output_pos: usize = self.registers[head_pos + 3].try_into().unwrap();
+                1 | 2 => {
+                    let input1: usize = self.registers[head_pos + 1].try_into().unwrap();
+                    let input2: usize = self.registers[head_pos + 2].try_into().unwrap();
+                    let output: usize = self.registers[head_pos + 3].try_into().unwrap();
 
-                    self.registers[output_pos] = self.registers[input1_pos] + self.registers[input2_pos];
-                },
-                2 => {
-                    let input1_pos: usize = self.registers[head_pos + 1].try_into().unwrap();
-                    let input2_pos: usize = self.registers[head_pos + 2].try_into().unwrap();
-                    let output_pos: usize = self.registers[head_pos + 3].try_into().unwrap();
-
-                    self.registers[output_pos] = self.registers[input1_pos] * self.registers[input2_pos];
+                    let operation = if opcode == 1 {
+                        Operation::Add { input1, input2, output }
+                    } else {
+                        Operation::Multiply { input1, input2, output }
+                    };
+                    self.perform_op(operation);
+                    head_pos += 4;
                 },
                 99 => break,
                 _ => panic!("Invalid operation encountered!")
             }
+        }
+    }
 
-            head_pos += 4;
+    fn perform_op(&mut self, operation: Operation) {
+        match operation {
+            Operation::Add { input1, input2, output } => {
+                self.registers[output] = self.registers[input1] + self.registers[input2]
+            },
+            Operation::Multiply { input1, input2, output } => {
+                self.registers[output] = self.registers[input1] * self.registers[input2]
+            }
         }
     }
 
