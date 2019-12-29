@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{BufReader, Read};
 
-use super::Operation;
+use super::{Operation, Input};
 use super::parser::Parser;
 
 pub struct Computer {
@@ -35,7 +35,7 @@ impl Computer {
             if let Operation::Stop { .. } = operation {
                 break;
             } else {
-                let length = self.perform_op(operation);    
+                let length = self.perform_op(operation);
                 head_pos += length;
             }
         }
@@ -44,11 +44,27 @@ impl Computer {
     fn perform_op(&mut self, operation: Operation) -> usize {
         match operation {
             Operation::Add { input1, input2, output, length } => {
-                self.registers[output] = self.registers[input1] + self.registers[input2];
+                let left = match input1 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+                let right = match input2 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+                self.registers[output] = left + right;
                 length
-            },
+            }
             Operation::Multiply { input1, input2, output, length } => {
-                self.registers[output] = self.registers[input1] * self.registers[input2];
+                let left = match input1 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+                let right = match input2 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+                self.registers[output] = left * right;
                 length
             },
             Operation::Stop { length } => { length }
