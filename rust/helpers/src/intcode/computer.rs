@@ -4,6 +4,11 @@ use std::io::{BufReader, Read};
 use super::{Operation, Input};
 use super::parser::Parser;
 
+enum PointerMove {
+    Increment(usize),
+    Jump(usize)
+}
+
 pub struct Computer {
     registers: Vec<i32>,
     input: i32
@@ -34,7 +39,7 @@ impl Computer {
     }
 
     pub fn run_program(&mut self) {
-        let mut head_pos = 0;
+        let mut head_pos: usize = 0;
 
         while head_pos < self.registers.len() {
             let parser = Parser::new(&self);
@@ -44,49 +49,79 @@ impl Computer {
                 break;
             } else {
                 let length = self.perform_op(operation);
-                head_pos += length;
+                match length {
+                    PointerMove::Increment(size) => head_pos += size,
+                    PointerMove::Jump(index) => head_pos = index
+                }
             }
         }
     }
 
-    fn perform_op(&mut self, operation: Operation) -> usize {
+    fn perform_op(&mut self, operation: Operation) -> PointerMove {
         match operation {
-            Operation::Add { input1, input2, output, length } => {
-                let left = match input1 {
+            Operation::Add { input1, input2, output, length } |
+            Operation::Multiply { input1, input2, output, length } |
+            Operation::LessThan { input1, input2, output, length } |
+            Operation::Equal { input1, input2, output, length } => {
+                let first = match input1 {
                     Input::Position(i) => { self.registers[i] },
                     Input::Immediate(v) => v
                 };
-                let right = match input2 {
+                let second = match input2 {
                     Input::Position(i) => { self.registers[i] },
                     Input::Immediate(v) => v
                 };
-                self.registers[output] = left + right;
-                length
-            }
-            Operation::Multiply { input1, input2, output, length } => {
-                let left = match input1 {
-                    Input::Position(i) => { self.registers[i] },
-                    Input::Immediate(v) => v
-                };
-                let right = match input2 {
-                    Input::Position(i) => { self.registers[i] },
-                    Input::Immediate(v) => v
-                };
-                self.registers[output] = left * right;
-                length
+
+                match operation {
+                    Operation::Add {..} => self.registers[output] = first + second,
+                    Operation::Multiply {..} => self.registers[output] = first * second,
+                    Operation::LessThan {..} => {
+                        self.registers[output] = if first < second { 1 } else { 0 };
+                    },
+                    Operation::Equal {..} => {
+                        self.registers[output] = if first == second { 1 } else { 0 };
+                    },
+                    _ => panic!("Impossible case")
+                }
+                PointerMove::Increment(length)
             },
             Operation::Save { input, length } => {
                 match input {
                     Input::Position(i) => self.registers[i] = self.input,
                     _ => panic!("Immediate mode not supported for this command")
                 };
-                length
+                PointerMove::Increment(length)
             },
             Operation::Print { output, length } => {
                 println!("Opcode 4 output: {}", self.registers[output]);
-                length
+                PointerMove::Increment(length)
             },
-            Operation::Stop { length } => { length }
+            Operation::JumpIfTrue { input1, input2, length } |
+            Operation::JumpIfFalse { input1, input2, length } => {
+                let first = match input1 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+                let second = match input2 {
+                    Input::Position(i) => { self.registers[i] },
+                    Input::Immediate(v) => v
+                };
+
+                match operation {
+                    Operation::JumpIfTrue {..} => {
+                        if first != 0 {
+                            PointerMove::Jump(second as usize)
+                        } else { PointerMove::Increment(length) }
+                    },
+                    Operation::JumpIfFalse {..} => {
+                        if first == 0 {
+                            PointerMove::Jump(second as usize)
+                        } else { PointerMove:: Increment(length) }
+                    },
+                    _ => panic!("Impossible case")
+                }
+            },
+            Operation::Stop { length } => { PointerMove::Increment(length) }
         }
     }
 

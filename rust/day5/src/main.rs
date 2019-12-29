@@ -11,18 +11,7 @@ fn main() {
 
     helpers::reset_reader(&mut reader);
 
+    println!("\n{} Part 2 {}", marker, marker);
     let mut computer2 = intcode::Computer::with_input(&mut reader, 5);
-
-    // let part1 = 0;
-
-    // let part2 = 0;
-
-    // helpers::print_answers(
-    //     "Part 1: {part1}",
-    //     "Part 2: {part2}",
-    //     helpers::Answer {
-    //         part1: Box::new(part1),
-    //         part2: Box::new(part2)
-    //     }
-    // );
+    computer2.run_program();
 }

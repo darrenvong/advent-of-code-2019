@@ -19,17 +19,19 @@ impl<'a> Parser<'a> {
 
         let opcode = self.get_opcode(&mut opcode_mode_it).unwrap();
         match opcode {
-            1 | 2 => {
+            1 | 2 | 7 | 8 => {
                 let input1 = self.create_input_with_mode(head_pos + 1, opcode_mode_it.next());
                 let input2 = self.create_input_with_mode(head_pos + 2, opcode_mode_it.next());
                 let output = self.computer.get_register_value(head_pos + 3) as usize;
                 let length = 4;
 
-                return if opcode == 1 {
-                    Operation::Add { input1, input2, output, length }
-                } else {
-                    Operation::Multiply { input1, input2, output, length }
-                };
+                match opcode {
+                    1 => { Operation::Add { input1, input2, output, length } },
+                    2 => { Operation::Multiply { input1, input2, output, length } },
+                    7 => { Operation::LessThan { input1, input2, output, length } },
+                    8 => { Operation::Equal { input1, input2, output, length }},
+                    _ => panic!("Shouldn't ever get hit...")
+                }
             },
             3 => {
                 let value = self.computer.get_register_value(head_pos + 1) as usize;
@@ -38,6 +40,17 @@ impl<'a> Parser<'a> {
             4 => {
                 let output = self.computer.get_register_value(head_pos + 1) as usize;
                 Operation::Print { output, length: 2 }
+            },
+            5 | 6 => {
+                let input1 = self.create_input_with_mode(head_pos + 1, opcode_mode_it.next());
+                let input2 = self.create_input_with_mode(head_pos + 2, opcode_mode_it.next());
+                let length = 3;
+
+                return if opcode == 5 {
+                    Operation::JumpIfTrue { input1, input2, length }
+                } else {
+                    Operation::JumpIfFalse { input1, input2, length }
+                }
             },
             99 => Operation::Stop { length: 1 },
             _ => panic!("Invalid operation encountered!")
