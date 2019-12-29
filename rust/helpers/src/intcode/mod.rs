@@ -15,6 +15,8 @@ pub enum Operation {
         output: usize,
         length: usize
     },
+    Save { input: Input, length: usize },
+    Print { output: usize, length: usize },
     Stop { length: usize }
 }
 

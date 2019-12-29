@@ -20,8 +20,8 @@ impl<'a> Parser<'a> {
         let opcode = self.get_opcode(&mut opcode_mode_it).unwrap();
         match opcode {
             1 | 2 => {
-                let input1 = self.create_input(head_pos + 1, opcode_mode_it.next());
-                let input2 = self.create_input(head_pos + 2, opcode_mode_it.next());
+                let input1 = self.create_input_with_mode(head_pos + 1, opcode_mode_it.next());
+                let input2 = self.create_input_with_mode(head_pos + 2, opcode_mode_it.next());
                 let output = self.computer.get_register_value(head_pos + 3) as usize;
                 let length = 4;
 
@@ -31,12 +31,20 @@ impl<'a> Parser<'a> {
                     Operation::Multiply { input1, input2, output, length }
                 };
             },
+            3 => {
+                let value = self.computer.get_register_value(head_pos + 1) as usize;
+                Operation::Save { input: Input::Position(value), length: 2 }
+            },
+            4 => {
+                let output = self.computer.get_register_value(head_pos + 1) as usize;
+                Operation::Print { output, length: 2 }
+            },
             99 => Operation::Stop { length: 1 },
             _ => panic!("Invalid operation encountered!")
         }
     }
 
-    fn create_input(&self, pos: usize, mode_value: Option<char>) -> Input {
+    fn create_input_with_mode(&self, pos: usize, mode_value: Option<char>) -> Input {
         let value = self.computer.get_register_value(pos);
         let mode = mode_value.unwrap_or_else(|| '0').to_digit(10).unwrap();
         if mode == 0 { Input::Position(value as usize) } else { Input::Immediate(value) }
